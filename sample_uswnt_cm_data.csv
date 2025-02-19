@@ -1,0 +1,4 @@
+player_name,birth_date,team_name,competition_name,season_name,position_general,progressive_pass,progressive_pass_percentile,final_third_entry_pass,final_third_entry_pass_percentile,pass_completion_pressure,pass_completion_pressure_percentile,pressure,pressure_percentile,tackle,tackle_percentile,tackle_win_percentage,tackle_win_percentage_percentile,shot_assist_op,shot_assist_op_percentile,progressive_carry,progressive_carry_percentile
+Hal Hershfelt,10/3/2002,Washington Spirit,NWSL,2024,cm_6,2.524045,44,2.8476405,55,0.7912772,79,18.02427,56,2.588764,76,0.44339624,60,0.45303372,53,1.3914607,57
+Samantha Coffey,12/31/1998,Portland Thorns,NWSL,2024,cm_6,3.2241523,72,3.8689828,85,0.8235294,93,16.08283,42,2.5034595,75,0.525641,85,0.68276167,80,1.7069042,65
+Korbin Albert,10/13/2003,Paris Saint-Germain WFC,D1 Arkema,2023/2024,cm_6,3.3060503,74,3.3930516,75,0.8556701,99,25.056381,95,4.524069,100,0.3943662,32,0.60900927,75,2.8710437,95
