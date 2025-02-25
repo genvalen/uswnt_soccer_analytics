@@ -1,26 +1,31 @@
 # # add demographics
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 from soccerplots.radar_chart import Radar
-from datetime import datetime
+
+from typing import List
+
+from utils import load_data, get_player_data, get_metric_labels_and_bounds, get_metric_values
+
+st.set_page_config(
+    page_title="Scout USWNT Midfielder",
+    page_icon=":soccer_ball:", #  Favicon
+    # layout="wide",
+)
 
 # Load Data
-def load_data():
-    file_path = "sample_uswnt_cm_data.csv"
-    df = pd.read_csv(file_path)
-    df['age'] = df['birth_date'].apply(lambda x: datetime.now().year - int(x.split('/')[-1]))
-    return df
-
-df = load_data()
+df = load_data("sample_uswnt_cm_data.csv")
 
 # streamlit app begins
+with st.container():
+    st.image("United-States-National-Football-Team-Logo-PNG-747x1024.webp")
+
 st.title("USWNT Midfielders Analysis")
 
 tab1, tab2, tab3 = st.tabs(["Demographic data", "Individual Performance", "Player Comparison"])
 
 with tab1:
-    st.header("Player Demographics")
+    st.subheader("Player Demographics")
     demographic_data = df[['player_name', 'age', 'team_name']]
     demographic_data.columns = ['Player Name', 'Age', 'Team Name']
     df.style.hide(axis="index")  #  hiding index appears not to work in streamlit
@@ -29,84 +34,68 @@ with tab1:
 with tab2:
     # Sidebar: Player Selection
     player_options = df['player_name'].sort_values().unique()
-    selected_player = st.selectbox("Select a Player", player_options, index=0)
+    selected_player: str = st.selectbox("Select a Player", player_options, index=0)
+    selected_player_data: pd.DataFrame = get_player_data(df, selected_player)  # returns as Series due to being a singular row
 
-    player_data = df[df['player_name'] == selected_player].iloc[0]
-    # print(player_data)
-    # st.subheader(f"{selected_player} | {player_data['team_name']}, {player_data['season_name']}", divider=True)
-    # st.write(f"Age: {player_data['age']}")
-    # st.write(f"Birthdate: {player_data['birth_date']}")
-    # st.write(f"Team: {player_data['team_name']}")
+    st.subheader(f"Performance Metrics", divider="gray")
 
-    # Primary plot: Radar Chart
-    # params
-    # ranges
-    params = df.drop(
-        [
-            'player_name',
-            'birth_date',
-            'team_name',
-            'competition_name',
-            'season_name',
-            'position_general',
-            'age',
-        ],
-        axis=1
-    )
+    # Prepare arguments needed to plot the radar chart:
+    # - metrics
+    # - metric bounds
+    # - player data
+    # - radar chart titles
+    # - endnote
+    metrics, metric_bounds = get_metric_labels_and_bounds(df)
 
-    ranges = []
+    selected_player_metric_values: List = get_metric_values(selected_player_data, metrics)
 
-    for metric in params:
-        if "percentile" in metric:
-            params = params.drop([metric], axis=1)
-
-        else:
-            a = min(params[metric])
-            a -= (a * .25)
-            b = max(params[metric])
-            b += (b * .25)
-            ranges.append((a,b))
-
-
-    # Set up argumnets for the Radar plot.
-    params = list(params.columns)
-
-    cur_player_values = [player_data[m] for m in params]
+    metrics_clean = list(map(lambda x: x.replace("_", " "), metrics))
 
     title = dict(
-        title_name=player_data['player_name'],
-        title_color='#B6282F',
-        subtitle_name=f"{player_data['team_name']}, {player_data['season_name']}",
-        subtitle_color='#B6282F',
+        title_name=selected_player_data['player_name'],
+        title_color='#1F2742',
+        subtitle_name=f"{selected_player_data['team_name']}, {selected_player_data['season_name']}",
+        subtitle_color='#1F2742',
         title_fontsize=18,
         subtitle_fontsize=15,
     )
 
-    st.subheader(f"Performance Metrics", divider="gray")
+    endnote = "ALL UNITS ARE IN PER90."
 
-    radar = Radar()
-    fig, ax = radar.plot_radar(
-        ranges=ranges,
-        params=params,
-        values=cur_player_values,
-        radar_color=['#B6282F', '#344D94'],
-        alpha=[0.3, 0.6],
-        title=title,
-        filename='compare.jpg',
+    #  Configure radar plot and settings
+    radar = Radar(
+        background_color="#FFFFFF", patch_color="#D6D6D6", fontfamily="Liberation Serif",
+        label_fontsize=10, range_fontsize=6.5, label_color="#000000", range_color="#000000"
     )
 
-    # Display jpeg of Radar plot on stteamlit.
-    st.image("./compare.jpg")
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatterpolar(
-    #     r=[player_data[m] for m in metrics],
-    #     theta=metrics,
-    #     fill='toself',
-    #     name=selected_player
-    # ))
-    # fig.update_layout(polar=dict(radialaxis=dict(visible=True)), showlegend=True)
+    fig, ax = radar.plot_radar(
+        ranges=metric_bounds,
+        params=metrics_clean,
+        values=selected_player_metric_values,
+        radar_color=['#B6282F', '#344D94'],
+        title=title,
+        endnote=endnote,
+    )
 
-    # st.plotly_chart(fig)
+    #  Display radar plot on stteamlit.
+    st.pyplot(fig)
 
 with tab3:
     pass
+    # #  Compare players section
+    # st.subheader("Compare Players")
+    # selected_players = st.multiselect("Select Players to Compare", player_options, max_selections=2)
+
+    # title = dict(
+    #     title_name=selected_players[0],
+    #     subtitle_name='AFC Ajax',
+    #     subtitle_color='#B6282F',
+    #     title_name_2=selected_players[1],
+    #     subtitle_name_2='Fullback',
+    #     subtitle_color_2='#B6282F',
+    #     title_fontsize=18,
+    #     subtitle_fontsize=15,
+    # )
+
+
+
