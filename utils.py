@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 
 # Load Data
-def load_data(filepath) -> pd.DataFrame:
+def load_data(filepath: str) -> pd.DataFrame:
     """
     Return a Dataframe from a CSV file.
     """
@@ -14,7 +14,7 @@ def load_data(filepath) -> pd.DataFrame:
     df['age'] = df['birth_date'].apply(lambda x: datetime.now().year - int(x.split('/')[-1]))
     return df
 
-def get_player_data(df, selected_player) -> pd.Series:
+def get_player_data(df: pd.DataFrame, selected_player: str) -> pd.Series:
     """
     Return a Series object of data for the player specified.
     """
@@ -22,7 +22,7 @@ def get_player_data(df, selected_player) -> pd.Series:
     return player_data
 
 
-def get_metric_labels_and_bounds(df) -> Tuple[List[str], List[Tuple[float, float]]]:
+def get_metric_labels_and_bounds(df: pd.DataFrame) -> Tuple[List[str], List[Tuple[float, float]]]:
     """
     Return metrics, and a range of the
     lower and upper bound for each metric.
@@ -51,17 +51,36 @@ def get_metric_labels_and_bounds(df) -> Tuple[List[str], List[Tuple[float, float
             lower_bound -= (lower_bound * .15)  # buffer value by 15%
             upper_bound = max(metrics[x])
             upper_bound += (upper_bound * .15)  # buffer value by 15%
-            metric_lower_upper_bounds.append((lower_bound,upper_bound))
 
-    return metrics, metric_lower_upper_bounds
+            if x in ["pass_completion_pressure", "tackle_win_percentage"]:
+                lower_bound = 0.0
+                upper_bound = 1.0
+
+            metric_lower_upper_bounds.append((lower_bound, upper_bound))
+
+    metrics_labels = list(metrics.columns)
+
+    return metrics_labels, metric_lower_upper_bounds
 
 
-def get_metric_values(player, metrics):
+def get_metric_values(player_data: pd.Series, metrics: List) -> List[float]:
     """
-    Return player's values for each metric. Metrics units are normalized in per90.
+    Return player's values for each metric. Metrics units are normalized in per-90.
     """
-    return [player[m] for m in metrics]
+    return [player_data[m] for m in metrics]
 
+
+def format_metrics(metrics: List) -> List:
+    formatted_metrics = list(metrics)
+
+    for i, m in enumerate(formatted_metrics):
+        if m == "pass_completion_pressure":
+            formatted_metrics[i] = "pass_completion_pressure_%"
+
+        elif m == "tackle_win_percentage":
+            formatted_metrics[i] = "tackle_win_%"
+
+    return list(map(lambda x: x.replace("_", " "), formatted_metrics))
 
 
 
